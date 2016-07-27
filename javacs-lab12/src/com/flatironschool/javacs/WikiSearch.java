@@ -213,13 +213,13 @@ public class WikiSearch {
 
 		/* TF - IDF */
 		List<String> queryList = new ArrayList<String>();
-		queryList.addAll(Arrays.asList("java", "and", "the", "philosophy", "currently"));
+		queryList.addAll(Arrays.asList("election", "and", "the", "television", "on", "asia", "politics", "candy"));
 
 			for(String query : queryList) {
 				/*If the query has a document with a negative TF-IDF score (searchTFIDF() returns null),
 					cease searching on that query - that word is a stop word */
 				if(searchTFIDF(query, index) == null) {
-					System.out.println("Ignored Query: " + query);
+					System.out.println("Stop Word: " + query);
 					continue;
 				} else {
 					System.out.println("Query: " + query);
