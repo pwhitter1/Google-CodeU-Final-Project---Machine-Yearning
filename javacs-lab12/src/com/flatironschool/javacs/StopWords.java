@@ -42,7 +42,7 @@ public class StopWords {
 
       double TFIDF = getTermFrequency(index, url, term) * getInverseDocumentFrequency(index, term);
 
-      //cease calculations if the (pre-) TFIDF for the query of one document is not sufficiently high
+      //cease calculations if the (Double) TFIDF score for the query of one document is not sufficiently high
       if(TFIDF == 0 || TFIDF < 0) { return null; }
       return TFIDF;
     }
