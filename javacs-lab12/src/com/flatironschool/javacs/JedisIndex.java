@@ -115,7 +115,7 @@ public class JedisIndex {
 		for (String url: urls) {
 			if(stop.getTFIDF(this, url, term) == null) { return null; }
 
-			//convert the Double TF-IDF score to an Integer
+			//convert the Double
 			Integer count = stop.getTFIDF(this, url, term).intValue();
 			map.put(url, count);
 		}
