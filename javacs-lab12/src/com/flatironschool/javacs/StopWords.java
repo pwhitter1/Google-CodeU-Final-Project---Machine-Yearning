@@ -21,7 +21,7 @@ public class StopWords {
     /* Returns the inverse document frequency */
     public Double getInverseDocumentFrequency(JedisIndex index, String term) {
       //Get total number of documents (in resources)
-      double docNum = 13.0;
+      double docNum = 15.0;
 
       //Get total number of documents that contain search term
       int docTally = 1; //denominator adjustment so there is no division by zero
@@ -42,8 +42,8 @@ public class StopWords {
 
       double TFIDF = getTermFrequency(index, url, term) * getInverseDocumentFrequency(index, term);
 
-      //cease calculations if the TFIDF for the query of one document is negative
-      if(TFIDF < 0) { return null; }
+      //cease calculations if the (Double) TFIDF score for the query of one document is not sufficiently high
+      if(TFIDF == 0 || TFIDF < 0) { return null; }
       return TFIDF;
     }
 
