@@ -57,7 +57,7 @@ public class WikiSearchTest {
 			JedisIndex index = new JedisIndex(jedis);
 			StopWords stop = new StopWords();
 
-			assertThat(stop.getTermFrequency(index, "Java_(programming_language)", "currently"), is(2));
+			assertThat(stop.getTermFrequency(index, "Ivanka_Trump", "hillary"), is(2));
 					//the java wikipedia page uses the word "currently" twice
 	}
 
@@ -67,9 +67,10 @@ public class WikiSearchTest {
 			JedisIndex index = new JedisIndex(jedis);
 			StopWords stop = new StopWords();
 
-			assertThat(stop.getInverseDocumentFrequency(index, "currently"), is(0.5118833609788743)); 	//log10(13/4) = 0.51188336097
+			assertThat(stop.getInverseDocumentFrequency(index, "currently"), is(0.3979400086720376)); 	//log10(15/6) = 0.39794000867
 					//there are a total of 13 documents, three of which contain the word currently at least once
-							//test with number 4 as opposed to 3 because in getInverseDocumentFrequency() you started counting from
+							//test with number 6 documents with the keyword as opposed to actual 5
+							//because in getInverseDocumentFrequency() you started counting from
 							//one to avoid dividing by zero
 	}
 
