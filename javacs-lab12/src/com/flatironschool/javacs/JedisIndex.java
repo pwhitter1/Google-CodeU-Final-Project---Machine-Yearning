@@ -113,11 +113,12 @@ public class JedisIndex {
 		Map<String, Integer> map = new HashMap<String, Integer>();
 		Set<String> urls = getURLs(term);
 		for (String url: urls) {
-			if(stop.getTFIDF(this, url, term) == null) { return null; }
 
-			//convert the Double TF-IDF score to an Integer
-			Integer count = stop.getTFIDF(this, url, term).intValue();
-			map.put(url, count);
+			Double countDouble = stop.getTFIDF(this, url, term);
+			if(countDouble == null) { return null; }
+
+			int countInt = countDouble.intValue();
+			map.put(url, countInt);
 		}
 		return map;
 	}
