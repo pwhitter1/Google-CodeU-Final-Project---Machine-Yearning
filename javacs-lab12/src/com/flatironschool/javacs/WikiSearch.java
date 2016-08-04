@@ -9,8 +9,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Arrays;
 
 import redis.clients.jedis.Jedis;
+import org.jsoup.select.Elements;
 
 
 /**
@@ -51,6 +53,21 @@ public class WikiSearch {
 		List<Entry<String, Integer>> entries = sort();
 		for (Entry<String, Integer> entry: entries) {
 			System.out.println(entry);
+		}
+	}
+
+
+	/**
+	 * Prints the contents in (descending) order of term frequency.
+	 *
+	 * @param map
+	 */
+	private  void printInOrder() {
+		//Url || Term Score
+		List<Entry<String, Integer>> entries = sort();
+		Collections.reverse(entries);
+		for (Entry<String, Integer> entry: entries) {
+			System.out.println("URL: https://en.wikipedia.org/wiki/" + entry.getKey() + "  ||  TF-IDF: " + entry.getValue());
 		}
 	}
 
@@ -159,13 +176,83 @@ public class WikiSearch {
 		return new WikiSearch(map);
 	}
 
+	public static WikiSearch searchTFIDF(String term, JedisIndex index) {
+		if(index.getCountsTFIDF(term) == null) { return null; }
+		Map<String, Integer> map = index.getCountsTFIDF(term);
+		return new WikiSearch(map);
+	}
+
+
+	/* Index all of the pages locally stored in the resources folder
+	    	- only need to index once */
+	public static void indexResourcesFolder(JedisIndex index) throws IOException {
+		/*index.deleteURLSets();
+		index.deleteAllKeys();
+		index.deleteTermCounters();*/
+
+		WikiFetcher wf = new WikiFetcher();
+		for(Entry<String, Elements> entry : wf.readAllWikipedia().entrySet()) {
+			index.indexPage(entry.getKey(), entry.getValue());
+		}
+	}
+
+
+
 	public static void main(String[] args) throws IOException {
 
 		// make a JedisIndex
 		Jedis jedis = JedisMaker.make();
 		JedisIndex index = new JedisIndex(jedis);
 
-		// search for the first term
+
+
+		/* Index all of the wiki pages in the resource folder */
+		//indexResourcesFolder(index);
+
+
+
+		/* TF - IDF */
+		List<String> queryList = new ArrayList<String>();
+		queryList.addAll(Arrays.asList("java", "and", "the", "philosophy", "currently"));
+
+			for(String query : queryList) {
+				/*If the query has a document with a negative TF-IDF score (searchTFIDF() returns null),
+					cease searching on that query - that word is a stop word */
+				if(searchTFIDF(query, index) == null) {
+					System.out.println("Ignored Query: " + query);
+					continue;
+				} else {
+					System.out.println("Query: " + query);
+					WikiSearch search = searchTFIDF(query, index);
+					search.printInOrder();
+				}
+			}
+
+
+		//TF-IDF
+		/*String term4 = "java";
+		System.out.println("Query: " + term4);
+		WikiSearch search4 = searchTFIDF(term4, index);
+		search4.printInOrder();
+
+		String term5 = "and";
+		System.out.println("Query: " + term5);
+		WikiSearch search5 = searchTFIDF(term5, index);
+		search5.printInOrder();
+
+		String term6 = "the";
+		System.out.println("Query: " + term6);
+		WikiSearch search6 = searchTFIDF(term6, index);
+		search6.printInOrder();
+
+		String term7 = "philosophy";
+		System.out.println("Query: " + term7);
+		WikiSearch search7 = searchTFIDF(term7, index);
+		search7.printInOrder();*/
+
+
+		//TF (old)
+		/* // search for the first term
 		String term1 = "java";
 		System.out.println("Query: " + term1);
 		WikiSearch search1 = search(term1, index);
@@ -180,6 +267,6 @@ public class WikiSearch {
 		// compute the intersection of the searches
 		System.out.println("Query: " + term1 + " AND " + term2);
 		WikiSearch intersection = search1.and(search2);
-		intersection.print();
+		intersection.print(); */
 	}
 }

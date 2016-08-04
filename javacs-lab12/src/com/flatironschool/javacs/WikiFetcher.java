@@ -11,6 +11,11 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.util.Map;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
+
 
 public class WikiFetcher {
 	private long lastRequestTime = -1;
@@ -51,6 +56,7 @@ public class WikiFetcher {
 		// assemble the file name
 		String slash = File.separator;
 		String filename = "resources" + slash + realURL.getHost() + realURL.getPath();
+		System.out.println("Filename: " + filename);
 
 		// read the file
 		InputStream stream = WikiFetcher.class.getClassLoader().getResourceAsStream(filename);
@@ -60,6 +66,46 @@ public class WikiFetcher {
 		Element content = doc.getElementById("mw-content-text");
 		Elements paras = content.select("p");
 		return paras;
+	}
+
+
+	/**
+	 * Reads the contents of ALL Wikipedia page from src/resources.
+	 *
+	 * @param url
+	 * @return
+	 * @throws IOException
+	 */
+	public Map<String, Elements> readAllWikipedia() throws IOException {
+		Map<String, Elements> fileMap = new HashMap<String, Elements>();
+		List<String> fileParts = new ArrayList<String>();
+
+		File folder = new File("src/resources/en.wikipedia.org/wiki/");
+		File[] fileList = folder.listFiles();
+
+		for (int i = 0; i < fileList.length; i++) {
+		  if (fileList[i].isFile()) {
+					fileParts.add(fileList[i].getName());
+			}
+		}
+
+		for(String filePart : fileParts) {
+			// assemble the file name
+			String filename = "resources/en.wikipedia.org/wiki/" + filePart;
+
+			// read the file
+			InputStream stream = WikiFetcher.class.getClassLoader().getResourceAsStream(filename);
+			Document doc = Jsoup.parse(stream, "UTF-8", filename);
+
+			// TODO: factor out the following repeated code
+			Element content = doc.getElementById("mw-content-text");
+			Elements paras = content.select("p");
+
+			fileMap.put(filePart, paras);
+
+		}
+
+		return fileMap;
 	}
 
 	/**
