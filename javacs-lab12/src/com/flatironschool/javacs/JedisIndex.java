@@ -16,7 +16,7 @@ import redis.clients.jedis.Transaction;
 
 /**
  * Represents a Redis-backed web search index.
- * 
+ *
  */
 public class JedisIndex {
 
@@ -24,25 +24,25 @@ public class JedisIndex {
 
 	/**
 	 * Constructor.
-	 * 
+	 *
 	 * @param jedis
 	 */
 	public JedisIndex(Jedis jedis) {
 		this.jedis = jedis;
 	}
-	
+
 	/**
 	 * Returns the Redis key for a given search term.
-	 * 
+	 *
 	 * @return Redis key.
 	 */
 	private String urlSetKey(String term) {
 		return "URLSet:" + term;
 	}
-	
+
 	/**
 	 * Returns the Redis key for a URL's TermCounter.
-	 * 
+	 *
 	 * @return Redis key.
 	 */
 	private String termCounterKey(String url) {
@@ -51,7 +51,7 @@ public class JedisIndex {
 
 	/**
 	 * Checks whether we have a TermCounter for a given URL.
-	 * 
+	 *
 	 * @param url
 	 * @return
 	 */
@@ -59,10 +59,10 @@ public class JedisIndex {
 		String redisKey = termCounterKey(url);
 		return jedis.exists(redisKey);
 	}
-	
+
 	/**
 	 * Adds a URL to the set associated with `term`.
-	 * 
+	 *
 	 * @param term
 	 * @param tc
 	 */
@@ -72,7 +72,7 @@ public class JedisIndex {
 
 	/**
 	 * Looks up a search term and returns a set of URLs.
-	 * 
+	 *
 	 * @param term
 	 * @return Set of URLs.
 	 */
@@ -81,9 +81,11 @@ public class JedisIndex {
 		return set;
 	}
 
+
+
 	/**
 	 * Looks up a term and returns a map from URL to count.
-	 * 
+	 *
 	 * @param term
 	 * @return Map from URL to count.
 	 */
@@ -97,9 +99,33 @@ public class JedisIndex {
 		return map;
 	}
 
+
+	/**
+	 * Looks up a term and returns a map from URL to TF-IDF count.
+	 *
+	 * @param term
+	 * @return Map from URL to count.
+	 */
+
+	 //Can make this faster through using the "GET COUNTS FASTER" method
+	public Map<String, Integer> getCountsTFIDF(String term) {
+		StopWords stop = new StopWords();
+		Map<String, Integer> map = new HashMap<String, Integer>();
+		Set<String> urls = getURLs(term);
+		for (String url: urls) {
+			if(stop.getTFIDF(this, url, term) == null) { return null; }
+
+			//convert the Double TF-IDF score to an Integer
+			Integer count = stop.getTFIDF(this, url, term).intValue();
+			map.put(url, count);
+		}
+		return map;
+	}
+
+
 	/**
 	 * Looks up a term and returns a map from URL to count.
-	 * 
+	 *
 	 * @param term
 	 * @return Map from URL to count.
 	 */
@@ -130,7 +156,7 @@ public class JedisIndex {
 
 	/**
 	 * Returns the number of times the given term appears at the given URL.
-	 * 
+	 *
 	 * @param url
 	 * @param term
 	 * @return
@@ -143,33 +169,33 @@ public class JedisIndex {
 
 	/**
 	 * Add a page to the index.
-	 * 
+	 *
 	 * @param url         URL of the page.
 	 * @param paragraphs  Collection of elements that should be indexed.
 	 */
 	public void indexPage(String url, Elements paragraphs) {
 		System.out.println("Indexing " + url);
-		
+
 		// make a TermCounter and count the terms in the paragraphs
 		TermCounter tc = new TermCounter(url);
 		tc.processElements(paragraphs);
-		
+
 		// push the contents of the TermCounter to Redis
 		pushTermCounterToRedis(tc);
 	}
 
 	/**
 	 * Pushes the contents of the TermCounter to Redis.
-	 * 
+	 *
 	 * @param tc
 	 * @return List of return values from Redis.
 	 */
 	public List<Object> pushTermCounterToRedis(TermCounter tc) {
 		Transaction t = jedis.multi();
-		
+
 		String url = tc.getLabel();
 		String hashname = termCounterKey(url);
-		
+
 		// if this page has already been indexed; delete the old hash
 		t.del(hashname);
 
@@ -186,14 +212,14 @@ public class JedisIndex {
 
 	/**
 	 * Prints the contents of the index.
-	 * 
+	 *
 	 * Should be used for development and testing, not production.
 	 */
 	public void printIndex() {
 		// loop through the search terms
 		for (String term: termSet()) {
 			System.out.println(term);
-			
+
 			// for each term, print the pages where it appears
 			Set<String> urls = getURLs(term);
 			for (String url: urls) {
@@ -205,9 +231,9 @@ public class JedisIndex {
 
 	/**
 	 * Returns the set of terms that have been indexed.
-	 * 
+	 *
 	 * Should be used for development and testing, not production.
-	 * 
+	 *
 	 * @return
 	 */
 	public Set<String> termSet() {
@@ -226,9 +252,9 @@ public class JedisIndex {
 
 	/**
 	 * Returns URLSet keys for the terms that have been indexed.
-	 * 
+	 *
 	 * Should be used for development and testing, not production.
-	 * 
+	 *
 	 * @return
 	 */
 	public Set<String> urlSetKeys() {
@@ -237,9 +263,9 @@ public class JedisIndex {
 
 	/**
 	 * Returns TermCounter keys for the URLS that have been indexed.
-	 * 
+	 *
 	 * Should be used for development and testing, not production.
-	 * 
+	 *
 	 * @return
 	 */
 	public Set<String> termCounterKeys() {
@@ -248,9 +274,9 @@ public class JedisIndex {
 
 	/**
 	 * Deletes all URLSet objects from the database.
-	 * 
+	 *
 	 * Should be used for development and testing, not production.
-	 * 
+	 *
 	 * @return
 	 */
 	public void deleteURLSets() {
@@ -264,9 +290,9 @@ public class JedisIndex {
 
 	/**
 	 * Deletes all URLSet objects from the database.
-	 * 
+	 *
 	 * Should be used for development and testing, not production.
-	 * 
+	 *
 	 * @return
 	 */
 	public void deleteTermCounters() {
@@ -280,9 +306,9 @@ public class JedisIndex {
 
 	/**
 	 * Deletes all keys from the database.
-	 * 
+	 *
 	 * Should be used for development and testing, not production.
-	 * 
+	 *
 	 * @return
 	 */
 	public void deleteAllKeys() {
@@ -296,17 +322,17 @@ public class JedisIndex {
 
 	/**
 	 * @param args
-	 * @throws IOException 
+	 * @throws IOException
 	 */
 	public static void main(String[] args) throws IOException {
 		Jedis jedis = JedisMaker.make();
 		JedisIndex index = new JedisIndex(jedis);
-		
+
 		//index.deleteTermCounters();
 		//index.deleteURLSets();
 		//index.deleteAllKeys();
 		loadIndex(index);
-		
+
 		Map<String, Integer> map = index.getCountsFaster("the");
 		for (Entry<String, Integer> entry: map.entrySet()) {
 			System.out.println(entry);
@@ -315,7 +341,7 @@ public class JedisIndex {
 
 	/**
 	 * Stores two pages in the index for testing purposes.
-	 * 
+	 *
 	 * @return
 	 * @throws IOException
 	 */
@@ -325,7 +351,7 @@ public class JedisIndex {
 		String url = "https://en.wikipedia.org/wiki/Java_(programming_language)";
 		Elements paragraphs = wf.readWikipedia(url);
 		index.indexPage(url, paragraphs);
-		
+
 		url = "https://en.wikipedia.org/wiki/Programming_language";
 		paragraphs = wf.readWikipedia(url);
 		index.indexPage(url, paragraphs);
