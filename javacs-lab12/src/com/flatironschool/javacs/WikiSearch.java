@@ -177,8 +177,8 @@ public class WikiSearch {
 	}
 
 	public static WikiSearch searchTFIDF(String term, JedisIndex index) {
-		if(index.getCountsTFIDF(term) == null) { return null; }
 		Map<String, Integer> map = index.getCountsTFIDF(term);
+		if(map == null) { return null; }
 		return new WikiSearch(map);
 	}
 
@@ -197,6 +197,57 @@ public class WikiSearch {
 	}
 
 
+/* Processes single-word queries */
+	public static void singleQuerySearch(JedisIndex index, String query) {
+			WikiSearch search = searchTFIDF(query, index);
+				/*If the query has a document with a negative TF-IDF score (searchTFIDF() returns null),
+					cease searching on that query - that word is a stop word */
+			if(search == null) {
+				System.out.println("Stop Word: " + query);
+			} else {
+					System.out.println("Query: " + query);
+					search.printInOrder();
+			}
+	}
+
+	/* Processes multi-word queries
+			- basically adds two WikiSearches together
+			(the AND feature will add greater functionality) */
+	public static void multiQuerySearch(JedisIndex index, String query, String[] splitQuery) {
+		Map<String, Integer> map = new HashMap<String, Integer>();
+		WikiSearch masterSearch = new WikiSearch(map);
+		boolean flag = false;
+
+		for(String queryPart : splitQuery) {
+			WikiSearch search = searchTFIDF(queryPart, index);
+			if(search == null) { continue; }
+
+			masterSearch.map.putAll(search.map);
+			flag = true;
+		}
+
+		if(flag == false) {
+			System.out.println("Stop Phrase: " + query);
+		} else {
+			System.out.println("Query: " + query);
+			masterSearch.printInOrder();
+		}
+	}
+
+/* Processes multi-word queries with at least one AND symbol  - TO BE ADDED */
+	public static void andQuerySearch() {}
+
+/* Processes multi-word queries with at least one OR symbol  - TO BE ADDED */
+	public static void orQuerySearch() {}
+
+/* Processes multi-word queries with at least one MINUS symbol  - TO BE ADDED */
+	public static void minusQuerySearch() {}
+
+/* Processes multi-word queries with at least one set of quotes - TO BE ADDED */
+	public static void quoteQuerySearch() {}
+
+/* For testing front end code */
+//public static String temp() { System.out.println("hello"); return "hello world"; }
 
 	public static void main(String[] args) throws IOException {
 
@@ -205,28 +256,23 @@ public class WikiSearch {
 		JedisIndex index = new JedisIndex(jedis);
 
 
-
 		/* Index all of the wiki pages in the resource folder */
 		//indexResourcesFolder(index);
 
 
-
 		/* TF - IDF */
 		List<String> queryList = new ArrayList<String>();
-		queryList.addAll(Arrays.asList("election", "and", "the", "television", "on", "asia", "politics", "candy"));
+		queryList.addAll(Arrays.asList("election", "and", "the", "television", "on", "asia", "politics", "candy", "Mike Pence", "and and", "the and", "Mike and"));
 
 			for(String query : queryList) {
-				/*If the query has a document with a negative TF-IDF score (searchTFIDF() returns null),
-					cease searching on that query - that word is a stop word */
-				if(searchTFIDF(query, index) == null) {
-					System.out.println("Stop Word: " + query);
-					continue;
-				} else {
-					System.out.println("Query: " + query);
-					WikiSearch search = searchTFIDF(query, index);
-					search.printInOrder();
-				}
+					String queryLower = query.toLowerCase(); // - queries with capital letters are not processed correctly
+					String[] splitQuery = queryLower.split("\\s+");
+					if(splitQuery.length > 1) { multiQuerySearch(index, queryLower, splitQuery); }
+					else { singleQuerySearch(index, queryLower); }
 			}
+
+
+
 
 
 		//TF-IDF
