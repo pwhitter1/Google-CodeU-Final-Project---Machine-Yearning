@@ -56,7 +56,7 @@ public class SimpleSpellCheck {
 			for (int i = 0; i < searchTerms.length; i++) {
 				if (!spellChecker.exist(searchTerms[i])) {
 					String[] suggestions = spellChecker.suggestSimilar(searchTerms[i], SUGGESTION_NO);
-					else if (suggestions != null && suggestions.length > 0) {
+					if (suggestions != null && suggestions.length > 0) {
 						result += " " + suggestions[0];
 					}
 				} else {
