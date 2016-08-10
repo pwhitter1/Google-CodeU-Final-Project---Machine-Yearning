@@ -1,5 +1,8 @@
 package com.flatironschool.javacs;
 
+//import com.flatironschool.javacs.*;
+
+
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
@@ -31,6 +34,10 @@ public class WikiSearch {
 	 */
 	public WikiSearch(Map<String, Integer> map) {
 		this.map = map;
+	}
+
+	public WikiSearch() {
+		this.map = new HashMap<String, Integer>();
 	}
 
 	/**
@@ -198,25 +205,36 @@ public class WikiSearch {
 
 
 /* Processes single-word queries */
-	public static void singleQuerySearch(JedisIndex index, String query) {
+	public List<String> singleQuerySearch(JedisIndex index, String query) {
 			WikiSearch search = searchTFIDF(query, index);
+			List<String> results = new ArrayList<String>();
 				/*If the query has a document with a negative TF-IDF score (searchTFIDF() returns null),
 					cease searching on that query - that word is a stop word */
 			if(search == null) {
+
 				System.out.println("Stop Word: " + query);
 			} else {
 					System.out.println("Query: " + query);
 					search.printInOrder();
+					for (String url : search.getMap().keySet()) {
+            results.add(url);
+					}
 			}
+			Collections.reverse(results);
+			return results;
 	}
 
+private Map<String, Integer> getMap() {
+	return this.map;
+}
 	/* Processes multi-word queries
 			- basically adds two WikiSearches together
 			(the AND feature will add greater functionality) */
-	public static void multiQuerySearch(JedisIndex index, String query, String[] splitQuery) {
+	public List<String> multiQuerySearch(JedisIndex index, String query, String[] splitQuery) {
 		Map<String, Integer> map = new HashMap<String, Integer>();
 		WikiSearch masterSearch = new WikiSearch(map);
 		boolean flag = false;
+		List<String> results = new ArrayList<String>();
 
 		for(String queryPart : splitQuery) {
 			WikiSearch search = searchTFIDF(queryPart, index);
@@ -231,11 +249,29 @@ public class WikiSearch {
 		} else {
 			System.out.println("Query: " + query);
 			masterSearch.printInOrder();
+			for (String url : masterSearch.getMap().keySet()) {
+				results.add(url);
+			}
 		}
+
+		Collections.reverse(results);
+		return results;
 	}
 
-/* Processes multi-word queries with at least one AND symbol  - TO BE ADDED */
-	public static void andQuerySearch() {}
+/* Processes multi-word queries with one AND symbol between two words */
+	public static void andQuerySearch(JedisIndex index, String query, String[] splitQuery) {
+		WikiSearch searchOne = searchTFIDF(splitQuery[0], index);
+		WikiSearch searchTwo = searchTFIDF(splitQuery[2], index);
+
+		WikiSearch masterSearch = searchOne.and(searchTwo);
+
+		if(masterSearch == null) {
+			System.out.println("Stop Phrase: " + query);
+		} else {
+				System.out.println("Query: " + query);
+				masterSearch.printInOrder();
+		}
+	}
 
 /* Processes multi-word queries with at least one OR symbol  - TO BE ADDED */
 	public static void orQuerySearch() {}
@@ -246,11 +282,7 @@ public class WikiSearch {
 /* Processes multi-word queries with at least one set of quotes - TO BE ADDED */
 	public static void quoteQuerySearch() {}
 
-/* For testing front end code */
-//public static String temp() { System.out.println("hello"); return "hello world"; }
-
-	public static void main(String[] args) throws IOException {
-
+	public List<String> searchQuery(String query) throws IOException {
 		// make a JedisIndex
 		Jedis jedis = JedisMaker.make();
 		JedisIndex index = new JedisIndex(jedis);
@@ -261,15 +293,44 @@ public class WikiSearch {
 
 
 		/* TF - IDF */
-		List<String> queryList = new ArrayList<String>();
-		queryList.addAll(Arrays.asList("election", "and", "the", "television", "on", "asia", "politics", "candy", "Mike Pence", "and and", "the and", "Mike and"));
 
-			for(String query : queryList) {
 					String queryLower = query.toLowerCase(); // - queries with capital letters are not processed correctly
 					String[] splitQuery = queryLower.split("\\s+");
-					if(splitQuery.length > 1) { multiQuerySearch(index, queryLower, splitQuery); }
-					else { singleQuerySearch(index, queryLower); }
+					if(splitQuery.length > 1) {
+						//if(query.contains("AND")) { andQuerySearch(index, queryLower, splitQuery); }
+						return multiQuerySearch(index, queryLower, splitQuery);
+					}
+					else {
+					return singleQuerySearch(index, queryLower); }
 			}
+
+	public static void main(String[] args) throws IOException {
+
+		// make a JedisIndex
+		Jedis jedis = JedisMaker.make();
+		JedisIndex index = new JedisIndex(jedis);
+
+
+
+		new WikiSearch().searchQuery("mike pence");
+
+		/* Index all of the wiki pages in the resource folder */
+		//indexResourcesFolder(index);
+
+
+		/* TF - IDF */
+		List<String> queryList = new ArrayList<String>();
+		queryList.addAll(Arrays.asList("election", "and", "the", "on", "asia", "politics", "candy", "Mike Pence", "and and", "the and", "Mike and"));
+
+			/*for(String query : queryList) {
+					String queryLower = query.toLowerCase(); // - queries with capital letters are not processed correctly
+					String[] splitQuery = queryLower.split("\\s+");
+					if(splitQuery.length > 1) {
+						//if(query.contains("AND")) { andQuerySearch(index, queryLower, splitQuery); }
+						multiQuerySearch(index, queryLower, splitQuery);
+					}
+					else { singleQuerySearch(index, queryLower); }
+			}*/
 
 
 

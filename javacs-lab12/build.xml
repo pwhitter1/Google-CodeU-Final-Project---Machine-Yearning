@@ -348,6 +348,16 @@
             <classpath refid="JavaCS.classpath"/>
         </java>
     </target>
+    <target name="StopWords">
+        <java classname="com.flatironschool.javacs.StopWords" failonerror="true" fork="yes">
+            <classpath refid="JavaCS.classpath"/>
+        </java>
+        <target name="SimpleSpellCheck">
+            <java classname="com.flatironschool.javacs.SimpleSpellCheck" failonerror="true" fork="yes">
+                <classpath refid="JavaCS.classpath"/>
+            </java>
+        </target>
+    </target>
     <target name="LinkedListExample">
         <java classname="com.flatironschool.javacs.LinkedListExample" failonerror="true" fork="yes">
             <classpath refid="JavaCS.classpath"/>

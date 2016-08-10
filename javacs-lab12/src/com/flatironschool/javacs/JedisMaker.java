@@ -25,9 +25,9 @@ public class JedisMaker {
 
 
 		// assemble the file name
-		String slash = File.separator;
+		/*String slash = File.separator;
 		String filename = "resources" + slash + "redis_url.txt";
-		URL fileURL = JedisMaker.class.getClassLoader().getResource(filename);
+		URL fileURL = JedisMaker.class.getResource(filename);
 
 	  StringBuilder sb = new StringBuilder();
 		BufferedReader br;
@@ -44,13 +44,13 @@ public class JedisMaker {
 			if (line == null) break;
 			sb.append(line);
 		}
-		br.close();
+		br.close();*/
 
 		URI uri;
 		try {
-			uri = new URI(sb.toString());
+			uri = new URI("redis://redistogo:9fac03d395573d76c0aeb41a80bda628@viperfish.redistogo.com:10994/");//sb.toString());
 		} catch (URISyntaxException e) {
-			System.out.println("Reading file: " + filename);
+			//System.out.println("Reading file: " + filename);
 			System.out.println("It looks like this file does not contain a valid URI.");
 			printInstructions();
 			return null;

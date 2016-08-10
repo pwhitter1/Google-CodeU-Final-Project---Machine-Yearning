@@ -17,7 +17,7 @@ public class SimpleSpellCheck {
 	private final static int SUGGESTION_NO = 1;
 
 	SpellChecker spellChecker;
-	
+
 
 	/**
 	* Constructor.
@@ -26,7 +26,7 @@ public class SimpleSpellCheck {
 	*/
 	public SimpleSpellCheck() {
 
-		
+
 		String pathString = System.getProperty("user.home") + File.separator + "Documents" +File.separator + "Lucene";
 		String englishDictionary = "src" + File.separator + "resources" + File.separator + "20kwords.txt";
 		Path dir = Paths.get(pathString);
@@ -45,7 +45,7 @@ public class SimpleSpellCheck {
 	}
 
 	/*
-	* Gives an alternate suggestion. 
+	* Gives an alternate suggestion.
 	*/
 	public String checkSpelling(String searchQuery) {
 		String[] searchTerms = searchQuery.split(" ");
@@ -54,17 +54,11 @@ public class SimpleSpellCheck {
 			for (int i = 0; i < searchTerms.length; i++) {
 				if (!spellChecker.exist(searchTerms[i])) {
 					String[] suggestions = spellChecker.suggestSimilar(searchTerms[i], SUGGESTION_NO);
-					if (suggestions != null && suggestions.length > 0 && i == 0) {
-						result += "Did you mean: " + suggestions[0];
-					} else if (suggestions != null && suggestions.length > 0) {
+					if (suggestions != null && suggestions.length > 0) {
 						result += " " + suggestions[0];
 					}
 				} else {
-					if (i == 0) {
-						result += "Did you mean: " + searchTerms[i];
-					} else {
 						result += " " + searchTerms[i];
-					}
 				}
 			}
 		} catch (IOException e) {
@@ -74,7 +68,7 @@ public class SimpleSpellCheck {
 	}
 
 	public static void main(String[] args) throws IOException {
-		
+
 		SimpleSpellCheck checker = new SimpleSpellCheck();
 		System.out.println(checker.checkSpelling("heklo woirld"));
 
