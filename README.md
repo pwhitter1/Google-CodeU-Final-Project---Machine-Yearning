@@ -10,5 +10,5 @@ See our uploaded presentation for more information.
 
 
 
-Caitlin Whitter and Alan Peral\
-Team 47 - Machine Yearning}
+Caitlin Whitter and Alan Peral
+Team 47 - Machine Yearning
